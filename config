@@ -3,3 +3,4 @@ i3/config /home/c4tdog/.config/i3/config
 polybar/config /home/c4tdog/.config/polybar/config
 polybar/launch.sh /home/c4tdog/.config/polybar/launch.sh
 picom/picom.conf /home/c4tdog/.config/picom/picom.conf
+wallpaper/cyberpunk_monochrome.jpg /home/c4tdog/Pictures/Wallpapers/cyberpunk_monochrome.jpg
