@@ -1,0 +1,2 @@
+# Install script will symlink each file declared in lcol to the destination declared in rcol
+i3/config /home/c4tdog/.config/i3/config
