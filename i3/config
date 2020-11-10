@@ -183,7 +183,7 @@ gaps outer 10
 smart_gaps on
 
 # Set borders
-default_border pixel
+default_border pixel 1
 
 # Set wallpaper
 exec_always --no-startup-id feh --bg-fill ~/Pictures/Wallpapers/cyberpunk_monochrome.jpg
