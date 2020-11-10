@@ -13,6 +13,10 @@ else
 			if [ ! -f $src ]; then
 				echo "[-] Error linking $src to $dst - source file not found"
 			else
+				if [ -f $dst ]; then
+					echo "[-] $dst already exists - deleting first"
+					rm $dst
+				fi
 				ln -s $src $dst
 				if [ ! -f $dst ]; then
 					echo "[-] Error linking $src to $dst - destination file does not exist after link"
