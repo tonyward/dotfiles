@@ -3,3 +3,4 @@ i3 /home/c4tdog/.config/i3
 polybar /home/c4tdog/.config/polybar
 picom /home/c4tdog/.config/picom
 wallpapers /home/c4tdog/Pictures/Wallpapers
+fonts /home/c4tdog/.fonts
