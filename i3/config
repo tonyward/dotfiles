@@ -186,7 +186,7 @@ gaps outer 20
 default_border pixel 2
 
 # Set wallpaper
-exec_always --no-startup-id feh --bg-fill ~/Pictures/Wallpapers/cyberpunk_monochrome.jpg
+exec_always --no-startup-id feh --bg-fill ~/Pictures/Wallpapers/cyberpunk_city_pink.jpg
 
 # Run picom compositor
 exec_always --no-startup-id picom
