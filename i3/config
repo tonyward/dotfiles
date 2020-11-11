@@ -178,9 +178,9 @@ bindsym $mod+r mode "resize"
 bindsym $mod+Shift+x exec i3lock
 
 # Gaps
-gaps inner 10
-gaps outer 10
-smart_gaps on
+gaps inner 30
+gaps outer 20
+#smart_gaps on
 
 # Set borders
 default_border pixel 1
