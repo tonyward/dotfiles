@@ -6,6 +6,7 @@
 base = /home/c4tdog/
 
 [files]
+zsh/zshrc = .zshrc
 
 [dirs]
 i3 = .config/i3
@@ -13,4 +14,4 @@ polybar = .config/polybar
 picom = .config/picom
 wallpapers = Pictures/Wallpapers
 fonts = .fonts
-termite = termite
+termite = .config/termite
