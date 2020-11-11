@@ -16,3 +16,7 @@ picom = .config/picom
 wallpapers = Pictures/Wallpapers
 fonts = .fonts
 termite = .config/termite
+neofetch = .config/neofetch
+
+
+
