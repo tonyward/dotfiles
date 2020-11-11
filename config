@@ -1,7 +1,16 @@
-# Install script will symlink each file declared in lcol to the destination declared in rcol
-i3 /home/c4tdog/.config/i3
-polybar /home/c4tdog/.config/polybar
-picom /home/c4tdog/.config/picom
-wallpapers /home/c4tdog/Pictures/Wallpapers
-fonts /home/c4tdog/.fonts
-termite /home/c4tdog/termite
+# This is pretty hacky
+# Base address for destination symlinks must be defined in [base]
+# Define files and directories requiring symlinking in appropriate section
+# format these as "src" = "dst", python config reader requires a key=val format
+[base]
+base = /home/c4tdog/
+
+[files]
+
+[dirs]
+i3 = .config/i3
+polybar = .config/polybar
+picom = .config/picom
+wallpapers = Pictures/Wallpapers
+fonts = .fonts
+termite = termite
