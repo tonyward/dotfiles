@@ -194,3 +194,8 @@ exec_always --no-startup-id picom
 # Polybar launch script
 exec_always --no-startup-id ~/.config/polybar/launch.sh
 
+# Colours
+# class                 border  backgr. text    indicator child_border
+client.focused		#ffffff #ffffff #ffffff #ffffff   #ea6cc4
+client.unfocused	#ffffff #ffffff #ffffff #ffffff   #6eb6b3
+
