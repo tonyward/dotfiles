@@ -89,7 +89,7 @@ prompt_end() {
 # Context: user@hostname (who am I and where am I)
 prompt_context() {
   if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
-    prompt_segment black default "%(!.%{%F{yellow}%}.)%n@%m"
+    prompt_segment black magenta "%(!.%{%F{yellow}%}.)%n@%m"
   fi
 }
 
@@ -111,7 +111,7 @@ prompt_git() {
     dirty=$(parse_git_dirty)
     ref=$(git symbolic-ref HEAD 2> /dev/null) || ref="➦ $(git rev-parse --short HEAD 2> /dev/null)"
     if [[ -n $dirty ]]; then
-      prompt_segment yellow black
+      prompt_segment blue black
     else
       prompt_segment green $CURRENT_FG
     fi
@@ -204,7 +204,7 @@ prompt_hg() {
 
 # Dir: current working directory
 prompt_dir() {
-  prompt_segment blue $CURRENT_FG '%~'
+  prompt_segment white $CURRENT_FG '%~'
 }
 
 # Virtualenv: current working virtualenv
@@ -256,4 +256,9 @@ build_prompt() {
   prompt_end
 }
 
-PROMPT='%{%f%b%k%}$(build_prompt) '
+PROMPT='
+%{%f%b%k%}$(build_prompt)
+%{$fg_bold[magenta]%}(: %{$reset_color%}'
+
+# Clock icon is in Nerd Fonts
+RPROMPT='%{$fg[magenta]%} %*%{$reset_color%}'
