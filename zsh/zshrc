@@ -2,7 +2,7 @@
 export ZSH=$HOME/.oh-my-zsh
 
 # My own variation of theme "amuse"
-ZSH_THEME="agnoster"
+ZSH_THEME="my-amuse"
 
 # Plugins
 plugins=(git)
