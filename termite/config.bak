@@ -58,23 +58,32 @@ scrollback_lines = 10000
 #highlight = #2f2f2f
 
 # Colors from color0 to color254 can be set
-
 color0  = #272d3f
-color1  = #ffb0b0
-color2  = #b0ffd4
-color3  = #f8ffb5
-color4  = #afddff
-color5  = #d898f1
+#color1  = #4d5770
+color1  = #ffffff
+color2  = #afddff
+color3  = #b0ffd4
+color4  = #f8ffb5
+color5  = #ffb0b0
 color6  = #ffc7ec
-color7  = #ffffff
-color8  = #272d3f8
-color9  = #ffb0b0
-color10 = #b0ffd4
-color11 = #f8ffb5
-color12 = #afddff
-color13 = #d898f1
+color7  = #d898f1
+color8  = #272d3f
+color9  = #ffffff
+#color9  = #4d5770
+color10 = #afddff
+color11 = #b0ffd4
+color12 = #f8ffb5
+color13 = #ffb0b0
 color14 = #ffc7ec
-color15 = #ffffff
+color15 = #d898f1
+#color8  = #131e3d
+#color9  = #4f5e84
+#color10 = #85cbff
+#color11 = #6dffaf
+#color12 = #f1ff61
+#color13 = #ff8585
+#color14 = #fd95da
+#color15 = #d569ff
 
 # Use color2 as foreground instaed of color7
 #foreground = #ffc7ec
