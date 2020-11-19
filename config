@@ -8,6 +8,7 @@ base = /home/c4tdog/
 [files]
 zsh/zshrc = .zshrc
 zsh/my-amuse.zsh-theme = .oh-my-zsh/themes/my-amuse.zsh-theme
+zhs/my-agnoster.zsh-theme .oh-my-zsh/themes/my-agnoster.zsh-theme
 
 [dirs]
 i3 = .config/i3
