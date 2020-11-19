@@ -111,7 +111,7 @@ prompt_git() {
     dirty=$(parse_git_dirty)
     ref=$(git symbolic-ref HEAD 2> /dev/null) || ref="➦ $(git rev-parse --short HEAD 2> /dev/null)"
     if [[ -n $dirty ]]; then
-      prompt_segment blue black
+      prompt_segment pink black
     else
       prompt_segment green $CURRENT_FG
     fi
@@ -257,8 +257,8 @@ build_prompt() {
 }
 
 PROMPT='
-%{%f%b%k%}$(build_prompt)
+%{%f%b%k%}$(build_prompt) 
 %{$fg_bold[magenta]%}(: %{$reset_color%}'
 
-# Clock icon is in Nerd Fonts
-RPROMPT='%{$fg[magenta]%} %*%{$reset_color%}'
+# Clock icon is from nerd fonts
+RPROMPT='%{$fg[magenta]%} %*%{$reset_color%}' 
