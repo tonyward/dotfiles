@@ -183,7 +183,7 @@ gaps outer 20
 #smart_gaps on
 
 # Set borders
-default_border pixel 2
+default_border pixel 1
 
 # Set wallpaper
 exec_always --no-startup-id feh --bg-fill ~/Pictures/Wallpapers/anime_water_city.jpg
@@ -196,6 +196,6 @@ exec_always --no-startup-id ~/.config/polybar/launch.sh
 
 # Colours
 # class                 border  backgr. text    indicator child_border
-client.focused		#ffffff #ffffff #ffffff #ea6cc4   #ea6cc4
-client.unfocused	#ffffff #ffffff #ffffff #6eb6b3   #6eb6b3
-client.focused_inactive	#ffffff #ffffff #ffffff #6eb6b3   #6eb6b3
+client.focused		#ffffff #ffffff #ffffff #ffc7ec   #ffc7ec
+client.unfocused	#ffffff #ffffff #ffffff #c8e8ff   #c8e8ff
+client.focused_inactive	#ffffff #ffffff #ffffff #c8e8ff   #c8e8ff
