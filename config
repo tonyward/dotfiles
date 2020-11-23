@@ -19,5 +19,5 @@ fonts = .fonts
 termite = .config/termite
 neofetch = .config/neofetch
 minimal-functional-fox = .mozilla/firefox/tgn1htg3.default-release/chrome
-
+rofi = .config/rofi
 
