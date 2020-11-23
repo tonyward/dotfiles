@@ -1,30 +1,32 @@
  :root {
 
    /* Minimal Functional Fox variables*/
-  --mff-bg: #292f36;
-  --mff-icon-color: #e0fbfc;
+  --mff-bg: #414961;
+  --mff-icon-color: #c8e8ff;
   --mff-nav-toolbar-padding: 8px;
   --mff-sidebar-bg: var(--mff-bg);
   --mff-sidebar-color: #e0fbfc;
-  --mff-tab-border-radius: 0px;
-  --mff-tab-color: #fefefa;
-  --mff-tab-font-family: "Cantarell", sans;
+  --mff-tab-border-radius: 8px;
+  --mff-tab-color: #fefefe;
+  --mff-tab-font-family: "Iosevka Nerd Font";
   --mff-tab-font-size: 11pt;
   --mff-tab-font-weight: 400;
   --mff-tab-height: 32px;
-  --mff-tab-pinned-bg: #70c1b3;
-  --mff-tab-selected-bg: #ee6c4d;
-  --mff-tab-soundplaying-bg: #9c89b8;
-  --mff-urlbar-color: #98c1d9;
-  --mff-urlbar-focused-color: #e0fbfc;
-  --mff-urlbar-font-family: "Cantarell", serif;
+  --mff-tab-pinned-bg: #ffc4c4;
+  --mff-tab-selected-bg: #ffc4c4;
+  --mff-tab-soundplaying-bg: #e9b2ff;
+  --mff-tab-selected-color: #000000;
+  --mff-tab-selected-fg: #000000;
+  --mff-urlbar-color: #c8e8ff;
+  --mff-urlbar-focused-color: #a7ffef;
+  --mff-urlbar-font-family: "Iosevka Nerd Font";
   --mff-urlbar-font-size: 12pt;
   --mff-urlbar-font-weight: 700;
   --mff-urlbar-results-color: #e0fbfc;
-  --mff-urlbar-results-font-family: "mononoki Nerd Font", serif;
+  --mff-urlbar-results-font-family: "Iosevka Nerd Font";
   --mff-urlbar-results-font-size: 12pt;
   --mff-urlbar-results-font-weight: 700;
-  --mff-urlbar-results-url-color: #98c1d9;
+  --mff-urlbar-results-url-color: #a7ffef;
   /*   --mff-tab-selected-bg: linear-gradient(90deg, rgba(232,74,95,1) 0%, rgba(255,132,124,1) 50%, rgba(254,206,168,1) 100%); */
   /*   --mff-urlbar-font-weight: 600; */
 
