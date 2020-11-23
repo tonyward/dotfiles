@@ -186,7 +186,7 @@ gaps outer 20
 default_border pixel 0
 
 # Set wallpaper
-exec_always --no-startup-id feh --bg-fill ~/Pictures/Wallpapers/anime_water_city.jpg
+exec_always --no-startup-id feh --bg-fill ~/Pictures/Wallpapers/peaceful_villiage.jpg
 
 # Run picom compositor
 exec_always --no-startup-id picom
