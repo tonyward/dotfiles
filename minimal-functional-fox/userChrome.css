@@ -7,16 +7,15 @@
   --mff-sidebar-bg: var(--mff-bg);
   --mff-sidebar-color: #e0fbfc;
   --mff-tab-border-radius: 8px;
-  --mff-tab-color: #fefefe;
+  --mff-tab-color: #c8e8ff;
+  --mff-tab-highlighted-color: #414961;
   --mff-tab-font-family: "Iosevka Nerd Font";
   --mff-tab-font-size: 11pt;
   --mff-tab-font-weight: 400;
   --mff-tab-height: 32px;
   --mff-tab-pinned-bg: #ffc4c4;
-  --mff-tab-selected-bg: #ffc4c4;
+  --mff-tab-selected-bg: #c8e8ff;
   --mff-tab-soundplaying-bg: #e9b2ff;
-  --mff-tab-selected-color: #000000;
-  --mff-tab-selected-fg: #000000;
   --mff-urlbar-color: #c8e8ff;
   --mff-urlbar-focused-color: #a7ffef;
   --mff-urlbar-font-family: "Iosevka Nerd Font";
@@ -85,6 +84,13 @@
   font-weight: var(--mff-tab-font-weight);
   font-size: var(--mff-tab-font-size) !important;
   color: var(--mff-tab-color);
+}
+
+.tab-text[selected="true"] {
+  font-family: var(--mff-tab-font-family);
+  font-weight: var(--mff-tab-font-weight);
+  font-size: var(--mff-tab-font-size) !important;
+  color: var(--mff-tab-highlighted-color);
 }
 
 /* Hide the favicon for tabs */
