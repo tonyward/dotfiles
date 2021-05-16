@@ -18,6 +18,6 @@ wallpapers = Pictures/Wallpapers
 fonts = .fonts
 termite = .config/termite
 neofetch = .config/neofetch
-minimal-functional-fox = .mozilla/firefox/tgn1htg3.default-release/chrome
+minimal-functional-fox = .mozilla/firefox/pcgxr9a4.default-release-1613554094664/chrome
 rofi = .config/rofi
 
