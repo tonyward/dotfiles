@@ -15,7 +15,7 @@ source $ZSH/oh-my-zsh.sh
 #. /usr/lib/python3.8/site-packages/powerline/bindings/zsh/powerline.zsh
 
 # Banner
-neofetch --crop_mode normal -- size 350px --kitty ~/Pictures/Greets/minimal_ghibli.jpg
+neofetch --crop_mode normal --size 350px --kitty ~/Pictures/Greets/minimal_ghibli.jpg
 
 
 
