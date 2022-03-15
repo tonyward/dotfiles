@@ -1,0 +1,5 @@
+The following must be installed for this setup
+
+feh		# Backgrounds
+i3-gaps		# Window manager
+#CBF documenting rn
