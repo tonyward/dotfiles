@@ -1,0 +1,94 @@
+Setup instructions for my arch build
+
+### Build considerations ###
+FDE is setup using LVM on LUKS with encrypted boot
+https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#LVM_on_LUKS
+https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Encrypted_boot_partition_(GRUB)
+
+Grub as boot manager supports encryped boot partition (LUKS1 only)
+https://wiki.archlinux.org/title/GRUB
+
+Partition scheme
+nvme0n1        259:0    0 931.5G  0 disk  
+├─nvme0n1p1    259:1    0   512M  0 part  /efi
+└─nvme0n1p2    259:2    0   931G  0 part  
+  └─cryptlvm   254:0    0   931G  0 crypt 
+    ├─vg0-swap 254:1    0    32G  0 lvm   [SWAP]
+    ├─vg0-root 254:2    0   128G  0 lvm   /
+    └─vg0-home 254:3    0   771G  0 lvm   /home
+2 partitions, 1 efi (encrypted boot) partition, 1 LUKS encrypted partition
+LUKS partition has LVM with 3 partitions, swap, root, home
+
+### Build incsturctions ###
+Build instructions are a combination of basic arch build + setup instructions for FDE + GRUB (above)
+https://wiki.archlinux.org/title/installation_guide
+
+#Connect to internet and update system clock (basic)
+
+#Create efi and luks encrypted partitions (FDE)
+EFI  -> +512MiB, code ef00
+LUKS -> remainder, code 8309
+
+#Setup encrypted partition (FDE)
+For encrypted boot grub compatability, use luks1
+cryptsetup luksFormat --type luks1 <dev>
+
+#create LVM partition table (FDE)
+32G swap
+128G root
+Remainder home
+
+#format and mount (FDE)
+fat32 efi
+ext4 home & root
+mkswap swap
+swapon swap
+mounted per above
+
+#install base system (base)
+Additional essential packages here
+base-devel is all the useful tools
+lvm2, intel-ucode, grub and efibootmgr let the system boot
+pacstrap /mnt base base-devel linux linux-firmware lvm2 intel-ucode grub efibootmgr
+
+#follow remainder of config instructions, except initramfs (base)
+
+#configure initramfs (FDE)
+/etc/mkinitcpio.conf
+use udev not systemd
+HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)
+
+#install grub (GRUB)
+Follow UEFI instructions
+grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
+
+#create grub master decryption key (FDE, avoiding having to enter passphrase twice)
+
+#configure grub (FDE)
+/etc/default/grub
+cryptdisk on
+LUKS partition too boot from
+master decryption key to use
+GRUB_CMDLINE_LINUX="cryptdevice=/dev/nvme0n1p2:cryptlvm cryptkey=rootfs:/root/cryptlvm.keyfile"
+GRUB_ENABLE_CRYPTODISK=y
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+#CONGRATS on a bootable FDE arch install
+
+### Post installation ###
+
+#Install essential packages
+vim
+network-manager
+i3-gaps		# Window manager
+lightdm		# Display manager
+
+# Enable network-manager and lxdm
+
+# Install yay from AUR
+https://aur.archlinux.org/packages/yay
+
+# Install remainder of packages from requirements.txt
+
+# Clone my dotfiles and run install to configure everything

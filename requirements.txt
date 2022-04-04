@@ -1,5 +1,15 @@
-The following must be installed for this setup
-
-feh		# Backgrounds
-i3-gaps		# Window manager
-#CBF documenting rn
+arandr
+feh
+firefox
+git
+imagemagick
+kitty
+lightdm
+neofetch
+pavucontrol
+picom
+polybar
+pulseaudio
+rofi
+vlc
+zsh
