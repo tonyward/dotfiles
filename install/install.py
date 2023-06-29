@@ -16,6 +16,7 @@
 
 #!/usr/bin/python
 from urllib import request
+from install_util import *
 import subprocess
 import re
 import time
@@ -46,47 +47,18 @@ GRUB_CRYPT = "GRUB_ENABLE_CRYPTODISK=y\n"
 CHROOT = "arch-chroot /mnt "
 
 
-def execute(cmd, outfile="", chroot=False):
-    if chroot:
-        cmd = CHROOT + cmd
-    cmd = cmd.split(' ')
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE)
-    if outfile != "":
-        write_file(proc.stdout.decode("ascii"), outfile)
-    return proc
-
-def write_file(string, file_path):
-    file = open(file_path, "w")
-    file.write(string)
-    file.close()
-
-def replace_in_file(match_line, string, file_path):
-    file = open(file_path, "r")
-    lines = file.readlines()
-    file.close()
-    file = open(file_path, "w")
-    for line in lines:
-        if re.match(match_line, line):
-            line = string
-        file.write(line)
-    file.close()
-
-def log(string):
-    print(FG_RED + string + FG_WHITE)
-
-
 
 log("[*] Install commencing")
 
-# Check internet connection before attempting install
 log("[*] Checking internet connection")
-try:
-    request.urlopen('https://google.com', timeout=5)
-    log("[+] internet connection good!")
-except:
-    log("[!] No internet!")
+if not has_network():
+    log("[!] No Internet!")
     log("Connect to internet first: iwctl station <wlan> connect <SSID>")
     exit()
+
+log("[+] internet connection good!")
+exit()
+
 
 # Get a list of all avaliable disks for install 
 cmd = 'lsblk -p'.split(' ')     # -p gives absolute path
@@ -136,7 +108,7 @@ time.sleep(1)
 subprocess.run('clear')
 log("[*] Encrpyting LUKS partition")
 cmd = "cryptsetup luksFormat --type luks1 {}".format(luks_partition).split(' ')     # use luks1 for grub compatability
-/subprocess.run(cmd)
+subprocess.run(cmd)
 log("[*] Opening LUKS container to partition with LVM")
 cmd = "cryptsetup open {} cryptlvm".format(luks_partition).split(' ')
 subprocess.run(cmd)
