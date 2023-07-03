@@ -22,10 +22,6 @@ import re
 import time
 import getpass
 
-# String constants for log coloring
-FG_WHITE='\u001b[37m'
-FG_RED='\u001b[31m'
-
 # Installation packages for pacstrap
 BASE_PKG = "base base-devel linux linux-firmware lvm2 grub efibootmgr"
 INTEL_PKG = "intel-ucode"
@@ -43,120 +39,133 @@ INITRAM_FILES = "FILES=(/root/cryptlvm.keyfile)"
 GRUB_CMDLINE = "GRUB_CMDLINE_LINUX=\"cryptdevice={}:cryptlvm cryptkey=rootfs:/root/cryptlvm.keyfile\"\n"
 GRUB_CRYPT = "GRUB_ENABLE_CRYPTODISK=y\n"
 
-# String to execute commangs in arch-chroot
-CHROOT = "arch-chroot /mnt "
+# Positions of useful information from lsblk command
+# lsblk output: <NAME>  <MAJ:MIN>   <RM>    <SIZE>  <RO>    <TYPE>    <MOUNTPOINTS>
+NAME_INDEX = 0
+SIZE_INDEX = 3
+TYPE_INDEX = 5
+
+# Input string to create 2 partitions with sfdisk
+# Format position is for efi partition size
+# sfdisk stdin - 1 line per partition <start>, <size>, <type> - blank is default, U is efi 
+SFDISK_PART = ", {}, U\n,,"
+
+def main():
+    log("[*] Install commencing")
+
+    if not has_network():
+        exit()
+    time.sleep(1)
+
+    install_disk = select_disk() 
+
+    partition_disk_phys(install_disk)
+    # Slight assumption, first volume made is <disk>+p1, second is <disk>+p2
+    efi_partition = install_disk + "p1"
+    luks_partition = install_disk + "p2"
+
+    encrypt_partition(luks_partition)
+    
+    create_lvm_on_luks()
+    
+    partitions = {"root": "/dev/vg0/root", "home": "/dev/vg0/home", 
+                  "swap": "/dev/vg0/swap", "efi": efi_partition}
+    format_partitions(partitions)
 
 
+def select_disk():
+    # Get a list of all avaliable disks 
+    proc = execute("lsblk -p")
+    result = proc.stdout
 
-log("[*] Install commencing")
+    disks = []
+    diskSizes = []
+    for line in result.splitlines():
+        line = line.split()
+        if line[TYPE_INDEX] == "disk":
+            disks.append(line[NAME_INDEX])
+            diskSizes.append(line[SIZE_INDEX])
 
-log("[*] Checking internet connection")
-if not has_network():
-    log("[!] No Internet!")
-    log("Connect to internet first: iwctl station <wlan> connect <SSID>")
-    exit()
+    # Display available disks and select disk to install to
+    for i in range(len(disks)):
+        print("{}\t{}".format(disks[i], diskSizes[i]))
 
-log("[+] internet connection good!")
+    valid = False
+    install_disk = ""
+    while not valid:
+        install_disk = input("Please select a disk to install to: ")
+        if install_disk in disks:
+            valid = True
+        else:
+            log("[!] Invalid disk selected, please try again")
+    return install_disk
+
+# Creates 2 partitions, efi and LUKS encrypted
+def partition_disk_phys(disk, efi_size="512M"):
+    # Create physical disk partitions
+    log("[*] Clearing any existing partition table")
+    execute("sfdisk --delete {}".format(disk))
+
+    log("[*] Creating efi and LUKS partitions")
+    cmd_input = SFDISK_PART.format(efi_size)
+    execute("sfdisk {}".format(disk), input=cmd_input)
+
+def encrypt_partition(partition, openas="cryptlvm"):
+    log("[*] Encrpyting {}".format(partition))
+    execute("cryptsetup luksFormat --type luks1 {}".format(partition))  # Use luks1 for grub compatability
+
+    if openas != "":
+        log("[*] Opening LUKS container to partition with LVM")
+        execute("cryptsetup open {} {}".format(partition, openas))
+
+def create_lvm_on_luks(luks="cryptlvm", vol_grp="vg0", swap_size="16G", root_size="128G"):
+    log("[*] Creating LVM volumes")
+    execute("pvcreate /dev/mapper/{}".format(luks))
+    execute("vgcreate {} /dev/mapper/{}".format(vol_grp, luks))
+    execute("lvcreate -L {} {} -n swap".format(swap_size, vol_grp))
+    execute("lvcreate -L {} {} -n root".format(root_size, vol_grp))
+    # home gets all space not used by swap or root
+    execute("lvcreate -l 100%FREE {} -n home".format(vol_grp))
+
+def format_partitions(partitions):
+    log("[*] Formatting partitions")
+    if not has_part_paths(partitions)
+        exit()
+
+    execute("mkfs.ext4 {}".format(partitions["root"]))
+    execute("mkfs.ext4 {}".format(partitions["home"]))
+    execute("mkswap {}".format(partitions["swap"]))
+    execute("mkfs.fat -F32 {}".format(partitions["efi"]))
+
+def mount_partitions(partitions, mnt_pnt="/mnt"):
+    log("[*] Mounting partitions")
+    if not has_part_paths(partitions)
+        exit()
+    
+    execute("mount {} {}".format(partitions["root"], mnt_pnt))
+    execute("mkdir {}/efi".format(mnt_pnt))
+    execute("mkdir {}/home".format(mnt_pnt))
+    execute("mount {} {}/efi".format(partitions["efi"], mnt_pnt))
+    execute("mount {} {}/home".format(partitions["home"], mnt_pnt))
+    execute("swapon {}".format(partitions["swap"]))
+
+# Checks that partitions contains a path for root, home, swap and efi
+def has_part_paths(partitions):
+    for part in ["root", "home", "swap", "efi"]:
+        if part not in partitions:
+            log("[!] Path not provided for all partitions")
+            return False
+    return True
+
+if __name__ == "__main__":
+    main()
+
 exit()
 
-
-# Get a list of all avaliable disks for install 
-cmd = 'lsblk -p'.split(' ')     # -p gives absolute path
-proc = subprocess.run(cmd, stdout=subprocess.PIPE)
-result = proc.stdout.decode('utf-8')
-disks = []
-diskSizes = []
-for line in result.split('\n'):
-    # Get name and size of each line that has "disk" as type
-    # lsblk output: <NAME>  <MAJ:MIN>   <RM>    <SIZE>  <RO>    <TYPE>    <MOUNTPOINTS>
-    m = re.match(r'^([^\s]*)\s*[^\s]*\s*[^\s]*\s*([^\s]*).*disk.*$', line)
-    if m is not None:
-        disks.append(m.group(1))
-        diskSizes.append(m.group(2))
-
-# Select install location
-time.sleep(1)
-subprocess.run('clear')
-for i in range(len(disks)):
-    print("{}\t{}".format(disks[i], diskSizes[i]))
-
-valid = False
-install_disk = ""
-while not valid:
-    install_disk = input("Please select a disk to install to: ")
-    if install_disk in disks:
-        valid = True
-    else:
-        log("[!] Invalid disk selected, please try again")
-
-# Create physical disk partitions
-subprocess.run('clear')
-log("[*] Clearing any existing partition table")
-cmd = "sfdisk --delete {}".format(install_disk).split(' ')
-subprocess.run(cmd)
-log("[*] Creating efi and LUKS partitions")
-cmd = "sfdisk {}".format(install_disk).split(' ')
-cmd_input = ", 512M, U\n,,"     # sfdisk stdin - 1 line per partition <start>, <size>, <type> - blank is default, U is efi 
-subprocess.run(cmd, input=cmd_input, encoding='ascii') # 512M efi partition, LUKS uses rest of disk
-
-# Slight assumpyion, first volume made is <disk>+p1, second is <disk>+p2
-efi_partition = install_disk + "p1"
-luks_partition = install_disk + "p2"
-
-# Encrypt LUKS partition
-time.sleep(1)
-subprocess.run('clear')
-log("[*] Encrpyting LUKS partition")
-cmd = "cryptsetup luksFormat --type luks1 {}".format(luks_partition).split(' ')     # use luks1 for grub compatability
-subprocess.run(cmd)
-log("[*] Opening LUKS container to partition with LVM")
-cmd = "cryptsetup open {} cryptlvm".format(luks_partition).split(' ')
-subprocess.run(cmd)
-
-# Below code is not working, calling cryptsetup and passing control works fine for now
-#matching_codes = False
-#while not matching_codes:
-#    pass1 = input("Please enter your encryption key:")
-#    pass2 = input("Please reenter your encryption key:")
-#    if pass1 != pass2:
-#        print("[!] Encryption keys do not match, try again")
-#    else:
-#        matching_codes = True
-#subprocess.run(["cryptsetup", "luksFormat", "--type", "luks1", partitions["LUKS"]]
-#                input="YES\n{}\n{}\n".format(pass1, pass1), encoding="ascii")     # Encrypt with LUKS1 for Grub compatability
-
-# Get partition sizes from user
-# Default to 16G swap, 128G root, remainder home
-# This does not valid that the disk is large enough
-time.sleep(1)
-subprocess.run("clear")
-log("[*] Creating LVM partitions")
-swap_size = (input("Please eneter the size of the swap partition (default 16G): ") or "16G") 
-root_size = (input("Please eneter the size of the root partition (default 128G): ") or "128G") 
-home_size = "100%FREE"
-
-# Create logical disk partitions
-subprocess.run(["pvcreate", "/dev/mapper/cryptlvm"])
-subprocess.run(["vgcreate", "vg0", "/dev/mapper/cryptlvm"])
-subprocess.run(["lvcreate", "-L", swap_size, "vg0", "-n", "swap"])
-subprocess.run(["lvcreate", "-L", root_size, "vg0", "-n", "root"])
-subprocess.run(["lvcreate", "-l", "100%FREE", "vg0", "-n", "home"])     # home gets all space not used by swap or root
-
-# Format partitions
-log("[*] Formatting partitions")
-subprocess.run(["mkfs.ext4", "/dev/vg0/root"])
-subprocess.run(["mkfs.ext4", "/dev/vg0/home"])
-subprocess.run(["mkswap", "/dev/vg0/swap"])
-subprocess.run(["mkfs.fat", "-F32", efi_partition])
+# Format partitions
 
 # Mount partitions
 log("[*] Mounting partitions")
-subprocess.run(["mount", "/dev/vg0/root", "/mnt"])
-subprocess.run(["mkdir", "/mnt/efi"])
-subprocess.run(["mkdir", "/mnt/home"])
-subprocess.run(["mount", "/dev/vg0/home", "/mnt/home"])
-subprocess.run(["mount", efi_partition, "/mnt/efi"])
-subprocess.run(["swapon", "/dev/vg0/swap"])
 
 # Install arch
 packages = "{} {} {} {}".format(BASE_PKG, INTEL_PKG, UTIL_PKG, DISP_PKG)
