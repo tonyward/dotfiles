@@ -10,9 +10,10 @@
 
 from urllib import request
 import subprocess
+import re
 
 # Chroot string for execute
-CHROOT = 'arch-chroot /mnt '
+CHROOT = "arch-chroot"
 
 # Escape characters to format text color in log
 FG_WHITE = '\u001b[37m'
@@ -29,13 +30,25 @@ def has_network(timeout=5):
         log("Connect to internet using: iwctl station <wlan> connect <SSID>")
         return False
 
-def execute(cmd, input="", outfile="", chroot=False):
-    if chroot:
-        cmd = CHROOT + cmd
+def execute(cmd, stdin="", outfile="", chroot_dir="", interactive=False):
+    if outfile != "" and interactive:
+        log("[!] Cannot execute in interactive mode and save output to file")
+
+    if chroot_dir != "":
+        cmd = "{} {} {}".format(CHROOT, chroot_dir, cmd)
     cmd = cmd.split(' ')
-    proc = subprocess.run(cmd, input=input, stdout=subprocess.PIPE, encoding='utf-8')
+
+    args = {"encoding": "utf-8"}
+    if stdin != "":
+        args["input"] = stdin
+    if not interactive:
+        args["stdout"] = subprocess.PIPE    # in non-interactive mode output can be processed
+
+    proc = subprocess.run(cmd, **args)
+
     if outfile != "":
-        write_file(proc.stdout.decode("ascii"), outfile)
+        write_file(proc.stdout, outfile)
+
     return proc
 
 def write_file(string, file_path):

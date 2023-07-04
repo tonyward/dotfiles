@@ -17,6 +17,7 @@
 #!/usr/bin/python
 from urllib import request
 from install_util import *
+import os
 import subprocess
 import re
 import time
@@ -31,13 +32,7 @@ DISP_PKG = "i3-gaps lightdm lightdm-gtk-greeter xorg-server"
 # Configuration constants
 TZ_REGION = "Australia"
 TZ_CITY = "Sydney"
-LOCALE = "en_US.UTF-8 UTF-8"
-LANG="LANG=en_US.UTF-8"
 HOST="lappy"
-INITRAM_HOOKS = "HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)"
-INITRAM_FILES = "FILES=(/root/cryptlvm.keyfile)"
-GRUB_CMDLINE = "GRUB_CMDLINE_LINUX=\"cryptdevice={}:cryptlvm cryptkey=rootfs:/root/cryptlvm.keyfile\"\n"
-GRUB_CRYPT = "GRUB_ENABLE_CRYPTODISK=y\n"
 
 # Positions of useful information from lsblk command
 # lsblk output: <NAME>  <MAJ:MIN>   <RM>    <SIZE>  <RO>    <TYPE>    <MOUNTPOINTS>
@@ -49,6 +44,9 @@ TYPE_INDEX = 5
 # Format position is for efi partition size
 # sfdisk stdin - 1 line per partition <start>, <size>, <type> - blank is default, U is efi 
 SFDISK_PART = ", {}, U\n,,"
+
+# Standard hooks, plus encrypt and lvm2 for booting encrypted lvm partition
+INITRAM_HOOKS = "HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)"
 
 def main():
     log("[*] Install commencing")
@@ -71,7 +69,18 @@ def main():
     partitions = {"root": "/dev/vg0/root", "home": "/dev/vg0/home", 
                   "swap": "/dev/vg0/swap", "efi": efi_partition}
     format_partitions(partitions)
+    mount_partitions(partitions)
 
+    packages = "{} {} {} {}".format(BASE_PKG, INTEL_PKG, UTIL_PKG, DISP_PKG)
+    pacstrap(packages)
+    
+    conf_fstab()
+    conf_tz()
+    conf_locale()
+    conf_network()
+    conf_users()
+    install_grub(luks_partition)
+    enable_services()
 
 def select_disk():
     # Get a list of all avaliable disks 
@@ -103,20 +112,28 @@ def select_disk():
 # Creates 2 partitions, efi and LUKS encrypted
 def partition_disk_phys(disk, efi_size="512M"):
     # Create physical disk partitions
+    if not os.path.exists(disk):
+        log("[!] Disk not found!")
+        exit()
+
     log("[*] Clearing any existing partition table")
     execute("sfdisk --delete {}".format(disk))
 
     log("[*] Creating efi and LUKS partitions")
     cmd_input = SFDISK_PART.format(efi_size)
-    execute("sfdisk {}".format(disk), input=cmd_input)
+    execute("sfdisk {}".format(disk), stdin=cmd_input)
 
 def encrypt_partition(partition, openas="cryptlvm"):
+    if not os.path.exists(partition):
+        log("[!] Partition not found!")
+        exit()
+
     log("[*] Encrpyting {}".format(partition))
-    execute("cryptsetup luksFormat --type luks1 {}".format(partition))  # Use luks1 for grub compatability
+    execute("cryptsetup luksFormat --type luks1 {}".format(partition), interactive=True)  # Use luks1 for grub compatability
 
     if openas != "":
         log("[*] Opening LUKS container to partition with LVM")
-        execute("cryptsetup open {} {}".format(partition, openas))
+        execute("cryptsetup open {} {}".format(partition, openas), interactive=True)
 
 def create_lvm_on_luks(luks="cryptlvm", vol_grp="vg0", swap_size="16G", root_size="128G"):
     log("[*] Creating LVM volumes")
@@ -129,7 +146,7 @@ def create_lvm_on_luks(luks="cryptlvm", vol_grp="vg0", swap_size="16G", root_siz
 
 def format_partitions(partitions):
     log("[*] Formatting partitions")
-    if not has_part_paths(partitions)
+    if not has_part_paths(partitions):
         exit()
 
     execute("mkfs.ext4 {}".format(partitions["root"]))
@@ -139,7 +156,7 @@ def format_partitions(partitions):
 
 def mount_partitions(partitions, mnt_pnt="/mnt"):
     log("[*] Mounting partitions")
-    if not has_part_paths(partitions)
+    if not has_part_paths(partitions):
         exit()
     
     execute("mount {} {}".format(partitions["root"], mnt_pnt))
@@ -157,70 +174,69 @@ def has_part_paths(partitions):
             return False
     return True
 
+def pacstrap(packages, mnt_path="/mnt"):
+    log("[*] Running pacstrap to install base system")
+    execute("pacstrap {} {}".format(mnt_path, packages), interactive=True)
+
+def conf_fstab(mnt_path="/mnt"):
+    log("[*] Configuring fstab")
+    execute("genfstab -U {}".format(mnt_path), outfile="{}/etc/fstab".format(mnt_path))
+
+def conf_tz(region="Australia", city="Sydney", mnt_path="/mnt"):
+    log("[*] Setting timezone")
+    execute("ln -sf {}/usr/share/zoneinfo/{}/{} {}/etc/localtime".format(mnt_path, region, city, mnt_path))
+
+def conf_locale(locale="en_US.UTF-8 UTF-8", lang="LANG=en_US.UTF-8", mnt_path="/mnt"):
+    log("[*] Configuring localization settings")
+    write_file(locale, "{}/etc/locale.gen".format(mnt_path))
+    write_file(lang, "{}/etc/locale.conf".format(mnt_path))
+
+def conf_network(hostname="lappy", mnt_path="/mnt"):
+    log("[*] Configuring network hosts")
+    write_file(hostname, "{}/etc/hostname".format(mnt_path))
+    hosts = "127.0.0.1\tlocalhost\n127.0.0.1\t{}".format(hostname)
+    write_file(hosts, "{}/etc/hosts".format(mnt_path))
+
+def conf_users(sudo_user="c4tdog", mnt_path="/mnt"):
+    log("[*] Configuring users")
+    log("[+] Set root password")
+    execute("passwd root", chroot_dir=mnt_path, interactive=True)
+
+    log("[+] Creating sudo user")
+    execute("useradd -mG wheel {}".format(sudo_user), chroot_dir=mnt_path)
+    execute("passwd {}".format(sudo_user), chroot_dir=mnt_path)
+    sudoers = "root ALL=(ALL:ALL) ALL\n" + "%wheel ALL=(ALL:ALL) ALL\n" + "@includedir /etc/sudoers.d"
+    write_file(sudoers, "{}/etc/sudoers".format(mnt_path))
+
+def install_grub(luks_partition, luks_name="cryptlvm", mnt_path="/mnt"):
+    log ("[*] Creating grub encryption key")
+    key_path = "{}/root/{}.keyfile".format(mnt_path, luks_name)
+    print(key_path)
+    execute("dd bs=512 count=4 if=/dev/random of={} iflag=fullblock".format(key_path))
+    execute("chmod 000 {}".format(key_path))
+    execute("cryptsetup -v luksAddKey {} {}".format(luks_partition, key_path), interactive=True)
+    
+    log("[*] Configuring intram with encrypted boot")
+    initram = "{}\nFILES=(/root/{}.keyfile)".format(INITRAM_HOOKS, luks_name)
+    write_file(initram, "{}/etc/mkinitcpio.conf".format(mnt_path))
+    execute("mkinitcpio -P", chroot_dir=mnt_path)
+    execute("chmod 600 {}/boot/initramfs-linux*".format(mnt_path))
+
+    log("[*] Installing grub")
+    grub_file = "{}/etc/default/grub".format(mnt_path)
+    grub_cmdline = "GRUB_CMDLINE_LINUX=\"cryptdevice={}:{} cryptkey=rootfs:/root/{}.keyfile\"\n".format(luks_partition, luks_name, luks_name)
+    grub_crypt = "GRUB_ENABLE_CRYPTODISK=y\n"
+    replace_in_file(".*GRUB_CMDLINE_LINUX=.*", grub_cmdline, grub_file)
+    replace_in_file(".*GRUB_ENABLE_CRYPTODISK.*", grub_crypt, grub_file)
+    execute("grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB", chroot_dir=mnt_path)
+    execute("grub-mkconfig -o /boot/grub/grub.cfg", chroot_dir=mnt_path)
+
+def enable_services(services={"lightdm", "NetworkManager"}, mnt_path="/mnt"):
+    log("[*] Enabling services")
+    for serv in services:
+        execute("systemctl enable {}".format(serv), chroot_dir=mnt_path)
+
 if __name__ == "__main__":
     main()
 
-exit()
 
-# Format partitions
-
-# Mount partitions
-log("[*] Mounting partitions")
-
-# Install arch
-packages = "{} {} {} {}".format(BASE_PKG, INTEL_PKG, UTIL_PKG, DISP_PKG)
-cmd = "pacstrap /mnt {}".format(packages).split(' ')
-subprocess.run(cmd)
-
-log("[*] Generating fstab");
-cmd = "genfstab -U /mnt"
-execute(cmd, outfile="/mnt/etc/fstab")
-
-log("[*] Setting timezone")
-cmd = "ln -sf /usr/share/zoneinfo/{}/{}".format(TZ_REGION, TZ_CITY)
-execute(cmd, chroot=True)
-execute("hwclock --systohc", chroot=True)
-
-log("[*] Configuring localization settings")
-write_file(LOCALE, "/mnt/etc/locale.gen")
-write_file(LANG, "/mnt/etc/locale.gen")
-execute("locale-gen", chroot=True)
-
-log("[*] Configuring network hosts")
-write_file(HOST, "/mnt/etc/hostname")
-hosts = "127.0.0.1\tlocalhost\n127.0.0.1\t{}".format(HOST)
-write_file(hosts, "/mnt/etc/hosts")
-
-log("[*] Configuring users")
-log("[+] Set root password")
-execute("passwd root", chroot=True)
-sudo_user = input("Please enter username for sudo user: ")
-
-execute("useradd -mG wheel {}".format(sudo_user), chroot=True)
-log("[+] Set {} password".format(sudo_user))
-execute("passwd {}".format(sudo_user), chroot=True)
-
-sudoers = "root ALL=(ALL:ALL) ALL\n" + "%wheel ALL=(ALL:ALL) ALL\n" + "@includedir /etc/sudoers.d"
-write_file(sudoers, "/mnt/etc/sudoers")
-
-log("[*] Creating grub encryption key")
-execute("dd bs=512 count=4 if=/dev/random of=/root/cryptlvm.keyfile iflag=fullblock", chroot=True)
-execute("chmod 000 /root/cryptlvm.keyfile", chroot=True)
-execute("cryptsetup -v luksAddKey {} /root/cryptlvm.keyfile".format(luks_partition), chroot=True)
-
-log("[*] Configuring intram with encrypted boot")
-write_file("{}\n{}".format(INITRAM_HOOKS, INITRAM_FILES), "/mnt/etc/mkinitcpio.conf")
-execute("mkinitcpio -P", chroot=True)
-execute("chmod 600 /mnt/boot/initramfs-linux*")
-
-log("[*] Installing grub")
-replace_in_file(".*GRUB_CMDLINE_LINUX=.*", GRUB_CMDLINE.format(luks_partition), "/mnt/etc/default/grub")
-replace_in_file(".*GRUB_ENABLE_CRYPTODISK.*", GRUB_CRYPT, "/mnt/etc/default/grub")
-execute("grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB", chroot=True)
-execute("grub-mkconfig -o /boot/grub/grub.cfg", chroot=True)
-
-log("[*] Enabling services")
-execute("systemctl enable lightdm", chroot=True)
-execute("systemctl enable NetworkManager", chroot=True)
-
-log("[#] All done!")
