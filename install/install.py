@@ -23,12 +23,7 @@ import re
 import time
 import getpass
 
-# Installation packages for pacstrap
-BASE_PKG = "base base-devel linux linux-firmware lvm2 grub efibootmgr"
-INTEL_PKG = "intel-ucode"
-UTIL_PKG = "vim networkmanager git go"
-DISP_PKG = "i3-gaps lightdm lightdm-gtk-greeter xorg-server"
-YAY_PKG = "kitty"
+CONF_FILE = "config.txt"
 
 # Configuration constants
 TZ_REGION = "Australia"
@@ -58,6 +53,8 @@ def main():
     if not has_network():
         exit()
     time.sleep(1)
+    
+    config = load_config(CONF_PATH)
 
     install_disk = select_disk() 
 
@@ -75,7 +72,11 @@ def main():
     format_partitions(partitions)
     mount_partitions(partitions)
 
-    packages = "{} {} {} {}".format(BASE_PKG, INTEL_PKG, UTIL_PKG, DISP_PKG)
+    # Install all packages except those needing Yay
+    packages = []
+    for section in config.sections():
+        if re.match(r"Pkgs\.(?!Yay)", section):
+            [packages.append(key) for key in config[section]]
     pacstrap(packages)
     
     conf_fstab()

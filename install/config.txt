@@ -1,0 +1,49 @@
+[Pkgs.Base]
+base
+base-devl
+linux
+linux-firmware
+lvm2
+grub
+efibootmgr
+
+[Pkgs.Intel]
+intel-ucode
+
+[Pkgs.Util]
+vim
+networkmanager
+git
+go		# req for yay
+man
+zsh
+pulseadusio
+pavucontrol
+
+[Pkgs.Disp]
+i3-gaps
+lightdm
+lightdm-gtk-greeter
+xorg-server
+arandr
+picom
+feh
+
+[Pkgs.User]
+firefox
+kitty
+neofetch
+imagemagick	# req for image rendering in kitty term
+polybar
+rofi
+vlc
+
+[Pkgs.Yay]
+
+[Install.Config]
+luks_name = cryptlvm
+tz.region = Australia
+tz.city = Sydney
+hostname = lappy
+mount_path = /mnt
+sudo_user = c4tdog
