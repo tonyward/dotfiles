@@ -1,4 +1,4 @@
-[Pkgs.Base]
+[Pacman.Base]
 base
 base-devl
 linux
@@ -7,20 +7,20 @@ lvm2
 grub
 efibootmgr
 
-[Pkgs.Intel]
+[Pacman.Intel]
 intel-ucode
 
-[Pkgs.Util]
+[Pacman.Util]
 vim
 networkmanager
 git
-go		# req for yay
+go
 man
 zsh
 pulseadusio
 pavucontrol
 
-[Pkgs.Disp]
+[Pacman.Disp]
 i3-gaps
 lightdm
 lightdm-gtk-greeter
@@ -29,16 +29,16 @@ arandr
 picom
 feh
 
-[Pkgs.User]
+[Pacman.User]
 firefox
 kitty
 neofetch
-imagemagick	# req for image rendering in kitty term
+imagemagick
 polybar
 rofi
 vlc
 
-[Pkgs.Yay]
+[Yay]
 
 [Install.Config]
 luks_name = cryptlvm

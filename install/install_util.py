@@ -14,6 +14,7 @@ import subprocess
 import re
 import os
 
+INSTALL_SETTINGS = {"luks_name", "tz.region", "tz.city", "hostname", "mount_path", "sudo_user"}
 
 # Chroot string for execute
 CHROOT = "arch-chroot"
@@ -33,28 +34,41 @@ def has_network(timeout=5):
         log("Connect to internet using: iwctl station <wlan> connect <SSID>")
         return False
 
-def load_config(config_path):
+def parse_config(config_path):
     if not os.path.isfile(config_path):
         log("[!] No config file found - {}".format(config_path))
         exit()
 
-    config = ConfigParser(allow_no_value=True)
-    config.read(config_path)
+    config_file = ConfigParser(allow_no_value=True)
+    config_file.read(config_path)
+    sections = config_file.sections() 
+    config_dict = {}
 
-    pkg_sects = [re.match("Pkgs.*", sect) for sect in config.sections()]
-    if not any(pkg_sect):
-        log("[!] No installation packages in config")
+    if not "Install.Config" in sections:
+        log("[!] No installation config in {}".format(config_path))
         exit()
 
-    if not "Timezone" in config.sections():
-        log("[!] No timezone specified in config")
-        exit()
-
-    if not "Network" in config.section():
-        log("[!] No network settings in config")
-        exit()
+    for setting in INSTALL_SETTINGS:
+        if setting not in config_file["Install.Config"]:
+            log("[!] Missing install setting {}".format(setting))
+            exit()
+        config_dict[setting] = config_file["Install.Config"][setting]
     
-    return config
+    pacman_sects = []
+    for sect in sections:
+        if re.match("Pacman.*", sect):
+            pacman_sects.append(sect)
+    pacman_pkgs  = [] 
+    for sect in pacman_sects:
+        [pacman_pkgs.append(key) for key in config_file[sect]]
+    if not any(pacman_pkgs):
+        log("[!] No installation packages in {}".format(config_path))
+        exit()
+    config_dict["pacman_pkgs"] = " ".join(pacman_pkgs)
+    
+    # TODO add yay package parsing
+
+    return config_dict
 
 def execute(cmd, stdin="", outfile="", chroot_dir="", interactive=False):
     if outfile != "" and interactive:
