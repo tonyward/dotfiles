@@ -240,17 +240,26 @@ def enable_services(services={"lightdm", "NetworkManager"}, mnt_path="/mnt"):
     for serv in services:
         execute("systemctl enable {}".format(serv), chroot_dir=mnt_path)
 
-def install_yay(mnt_parh="/mnt", sudo_user="c4tdog"):
+# Use of arch-chroot is hacky and inconsistent :(
+def install_yay(mnt_path="/mnt", sudo_user="c4tdog"):
     # makepkg must be run as non-root user and from dir of pkg being installed
-    yay_dir = "{}/home/{}".format(mnt_path, sudo_user)
+    yay_dir = "/home/{}/yay".format(sudo_user)
 
-    execute("git clone {} {}".format(YAY_REPO, yay_path))
-    execute("su {} makepkg -siC".format(sudo_user), chroot_dir=yay_path, interactive=True)
+    su = "su {}".format(sudo_user)
+    clone_repo = "git clone {} {}".format(YAY_REPO, yay_dir)
+    build_yay = "cd {}; makepkg -si --noconfirm".format(yay_dir)
 
-def install_yay_pkgs(packages, mnt_path="/mnt", sudo_user="c4tdog")
-    execute("su {} yay -Sy --noconfirm".format(sudo_user), chroot_dir=mnt_path, interactive=True)
+    execute(su, stdin=clone_repo, chroot_dir=mnt_path)
+    execute(su, stdin=build_yay, chroot_dir=mnt_path, interactive=True)
 
-def configure()
+def install_yay_pkgs(packages, mnt_path="/mnt", sudo_user="c4tdog"):
+    # yay cannot be run as root
+    su = "su {}".format(sudo_user)
+    install= "yay -Sy --noconfirm {}".format(packages)
+
+    execute(su, stdin=install, chroot_dir=mnt_path, interactive=True)
+
+def configure():
     return
 
 if __name__ == "__main__":
