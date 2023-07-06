@@ -28,6 +28,7 @@ BASE_PKG = "base base-devel linux linux-firmware lvm2 grub efibootmgr"
 INTEL_PKG = "intel-ucode"
 UTIL_PKG = "vim networkmanager git go"
 DISP_PKG = "i3-gaps lightdm lightdm-gtk-greeter xorg-server"
+YAY_PKG = "kitty"
 
 # Configuration constants
 TZ_REGION = "Australia"
@@ -47,6 +48,9 @@ SFDISK_PART = ", {}, U\n,,"
 
 # Standard hooks, plus encrypt and lvm2 for booting encrypted lvm partition
 INITRAM_HOOKS = "HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)"
+
+# Repo to install yay
+YAY_REPO = "https://aur.archlinux.org/yay.git"
 
 def main():
     log("[*] Install commencing")
@@ -235,6 +239,19 @@ def enable_services(services={"lightdm", "NetworkManager"}, mnt_path="/mnt"):
     log("[*] Enabling services")
     for serv in services:
         execute("systemctl enable {}".format(serv), chroot_dir=mnt_path)
+
+def install_yay(mnt_parh="/mnt", sudo_user="c4tdog"):
+    # makepkg must be run as non-root user and from dir of pkg being installed
+    yay_dir = "{}/home/{}".format(mnt_path, sudo_user)
+
+    execute("git clone {} {}".format(YAY_REPO, yay_path))
+    execute("su {} makepkg -siC".format(sudo_user), chroot_dir=yay_path, interactive=True)
+
+def install_yay_pkgs(packages, mnt_path="/mnt", sudo_user="c4tdog")
+    execute("su {} yay -Sy --noconfirm".format(sudo_user), chroot_dir=mnt_path, interactive=True)
+
+def configure()
+    return
 
 if __name__ == "__main__":
     main()
