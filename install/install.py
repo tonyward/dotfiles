@@ -25,11 +25,6 @@ import getpass
 
 CONF_FILE = "config.txt"
 
-# Configuration constants
-TZ_REGION = "Australia"
-TZ_CITY = "Sydney"
-HOST="lappy"
-
 # Positions of useful information from lsblk command
 # lsblk output: <NAME>  <MAJ:MIN>   <RM>    <SIZE>  <RO>    <TYPE>    <MOUNTPOINTS>
 NAME_INDEX = 0
@@ -54,7 +49,7 @@ def main():
         exit()
     time.sleep(1)
     
-    config = load_config(CONF_PATH)
+    config = parse_config(CONF_PATH)
 
     install_disk = select_disk() 
 
@@ -72,12 +67,7 @@ def main():
     format_partitions(partitions)
     mount_partitions(partitions)
 
-    # Install all packages except those needing Yay
-    packages = []
-    for section in config.sections():
-        if re.match(r"Pkgs\.(?!Yay)", section):
-            [packages.append(key) for key in config[section]]
-    pacstrap(packages)
+    pacstrap(config["pacman_pkgs"])
     
     conf_fstab()
     conf_tz()
@@ -252,13 +242,6 @@ def install_yay(mnt_path="/mnt", sudo_user="c4tdog"):
 
     execute(su, stdin=clone_repo, chroot_dir=mnt_path)
     execute(su, stdin=build_yay, chroot_dir=mnt_path, interactive=True)
-
-def install_yay_pkgs(packages, mnt_path="/mnt", sudo_user="c4tdog"):
-    # yay cannot be run as root
-    su = "su {}".format(sudo_user)
-    install= "yay -Sy --noconfirm {}".format(packages)
-
-    execute(su, stdin=install, chroot_dir=mnt_path, interactive=True)
 
 def configure():
     return
