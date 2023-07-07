@@ -1,6 +1,6 @@
 [Pacman.Base]
 base
-base-devl
+base-devel
 linux
 linux-firmware
 lvm2
@@ -17,7 +17,6 @@ git
 go
 man
 zsh
-pulseadusio
 pavucontrol
 
 [Pacman.Disp]
@@ -39,6 +38,7 @@ rofi
 vlc
 
 [Yay]
+pulseaduio
 
 [Install.Config]
 luks_name = cryptlvm

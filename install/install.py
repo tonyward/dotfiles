@@ -49,7 +49,7 @@ def main():
         exit()
     time.sleep(1)
     
-    config = parse_config(CONF_PATH)
+    config = parse_config(CONF_FILE)
 
     install_disk = select_disk() 
 
