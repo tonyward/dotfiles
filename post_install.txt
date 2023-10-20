@@ -1,0 +1,22 @@
+# Packages installed after installation
+# No auto install for these ATM
+[yay]
+####################
+#       GREY       #
+####################
+
+# wifi
+aircrack-ng
+reaver
+
+# Other
+hashcat
+nmap
+
+[unmanaged]
+####################
+#       GREY       #
+####################
+
+burpsuite
+
