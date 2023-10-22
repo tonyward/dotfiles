@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 ########################################
 #                                      #
 #                                      #
@@ -9,7 +11,6 @@
 #                                      #
 ########################################
 
-#!/usr/bin/python
 from configparser import ConfigParser
 import os
 

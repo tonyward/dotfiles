@@ -11,7 +11,7 @@ export GPG_TTY=$(tty)
 gpg-connect-agent updatestartuptty /bye >/dev/null
 
 # fix ssh in kitty terminal
-#[ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
+[ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
 
 # Plugins
 plugins=(git)
