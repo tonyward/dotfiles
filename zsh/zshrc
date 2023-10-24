@@ -1,6 +1,9 @@
 # Location of oh-myzsh
 export ZSH=$HOME/.oh-my-zsh
 
+# Disable bad virtualenv prompt (oh-my-zsh provides a better one)
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
 # My own variation of theme "amuse"
 ZSH_THEME="my-agnoster"
 
